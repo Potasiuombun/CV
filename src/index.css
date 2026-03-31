@@ -1,0 +1,308 @@
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  background: #040b08;
+  color: #e7f5d0;
+  font-family: "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.portfolio-root {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 8% 4%, rgba(68, 130, 92, 0.35), transparent 34%),
+    radial-gradient(circle at 92% 12%, rgba(28, 95, 125, 0.28), transparent 38%),
+    linear-gradient(180deg, #050d10 0%, #040b08 40%, #04110b 100%);
+}
+
+.portfolio-nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(145, 201, 145, 0.3);
+  background: rgba(6, 18, 12, 0.86);
+  backdrop-filter: blur(6px);
+}
+
+.portfolio-nav-title {
+  font-weight: 700;
+  color: #d7f3bf;
+}
+
+.portfolio-nav-items {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.portfolio-nav-items button {
+  border: 2px solid #3f6f4d;
+  background: #1a3a23;
+  color: #deefcb;
+  cursor: pointer;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.portfolio-nav-items button.is-active {
+  border-color: #99c886;
+  background: #2e5e37;
+  color: #f3fbe8;
+}
+
+.game-stage {
+  position: sticky;
+  top: 52px;
+  z-index: 5;
+  width: min(960px, 100% - 20px);
+  margin: 12px auto;
+  border: 4px solid #2a5132;
+  box-shadow: 0 0 0 3px #99c886;
+  background: #000;
+}
+
+.game-canvas {
+  width: 100%;
+  height: min(68vh, 700px);
+  display: block;
+}
+
+.room-chip {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: grid;
+  gap: 2px;
+  padding: 7px 10px;
+  background: rgba(4, 12, 9, 0.76);
+  border: 1px solid rgba(167, 243, 208, 0.45);
+  font-size: 11px;
+}
+
+.welcome-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 30%, rgba(86, 154, 98, 0.24), rgba(6, 14, 18, 0.88) 62%);
+  padding: 20px;
+}
+
+.welcome-card {
+  width: min(520px, 94vw);
+  border: 4px solid #2a5132;
+  background: repeating-linear-gradient(0deg, #132a1a 0px, #132a1a 14px, #173320 14px, #173320 28px);
+  color: #e7f5d0;
+  padding: 18px;
+  box-shadow: 0 0 0 3px #99c886, 0 14px 28px rgba(0, 0, 0, 0.55);
+}
+
+.welcome-card h2 {
+  margin: 0 0 8px;
+}
+
+.welcome-card p {
+  margin: 0;
+  color: #cde8b8;
+}
+
+.welcome-actions {
+  margin-top: 14px;
+}
+
+.welcome-kbd {
+  border: 2px solid #87b66f;
+  background: #254b2c;
+  color: #ecf8da;
+  border-radius: 6px;
+  display: inline-grid;
+  place-items: center;
+  min-width: 36px;
+  height: 34px;
+  font-size: 15px;
+  font-weight: 700;
+  margin-right: 6px;
+  padding: 0 8px;
+}
+
+.welcome-actions button,
+.portfolio-sections button {
+  border: 2px solid #87b66f;
+  background: #2f6238;
+  color: #f3fbe8;
+  padding: 7px 14px;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.portfolio-sections {
+  width: min(980px, 100% - 20px);
+  margin: 18px auto 40px;
+  display: grid;
+  gap: 14px;
+}
+
+.portfolio-section {
+  border: 2px solid rgba(141, 192, 130, 0.35);
+  background: rgba(8, 23, 15, 0.82);
+  padding: 14px;
+  scroll-margin-top: 76px;
+}
+
+.portfolio-section h2 {
+  margin: 0 0 6px;
+  color: #dbefc9;
+}
+
+.portfolio-section > p {
+  margin: 0 0 10px;
+  color: #b8d6b6;
+}
+
+.section-card {
+  border: 1px solid rgba(117, 165, 109, 0.4);
+  background: rgba(16, 37, 24, 0.75);
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.section-card h3 {
+  margin: 0;
+}
+
+.section-card p {
+  margin: 8px 0;
+  color: #d7e8c9;
+}
+
+.overlay-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.overlay-header h2 {
+  margin: 0;
+}
+
+.overlay-header p {
+  margin: 4px 0 0;
+  color: #bdd9b2;
+}
+
+.overlay-text p {
+  margin: 8px 0;
+}
+
+.overlay-project {
+  border: 1px solid rgba(126, 183, 118, 0.48);
+  background: rgba(14, 33, 21, 0.72);
+  padding: 10px;
+}
+
+.overlay-project p {
+  margin: 8px 0;
+}
+
+.overlay-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.overlay-links a {
+  color: #d4f5ca;
+}
+
+.overlay-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.overlay-gallery figure {
+  margin: 0;
+}
+
+.overlay-gallery img {
+  width: 100%;
+  border: 2px solid #3b6541;
+  display: block;
+}
+
+.overlay-gallery figcaption {
+  margin-top: 6px;
+  color: #bedcb8;
+  font-size: 12px;
+}
+
+.overlay-pdf iframe {
+  width: 100%;
+  height: min(60vh, 640px);
+  border: 2px solid #3b6541;
+  background: #fff;
+}
+
+.overlay-pdf p {
+  margin: 10px 0 0;
+  color: #bdd9b2;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 900px) {
+  .game-stage {
+    top: 58px;
+    width: calc(100% - 12px);
+    margin: 6px auto 10px;
+  }
+
+  .game-canvas {
+    height: min(48vh, 440px);
+  }
+
+  .portfolio-nav {
+    padding: 8px;
+  }
+
+  .portfolio-nav-title {
+    display: none;
+  }
+
+  .portfolio-nav-items {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    width: 100%;
+    padding-bottom: 2px;
+  }
+
+  .portfolio-sections {
+    width: calc(100% - 12px);
+  }
+}
