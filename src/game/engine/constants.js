@@ -42,8 +42,8 @@ export const SPRITE = {
 };
 
 export const FG_SOLID_ALPHA = 200;
-export const WALK_SPEED = 120;
-export const SPRINT_MULTIPLIER = 2.6;
+export const WALK_SPEED = 320;
+export const SPRINT_MULTIPLIER = 3.8;
 export const AUTOPILOT_MULTIPLIER = 3.4;
 export const SMOKE_PARTICLES_PER_SEC = 56;
 export const SMOKE_MAX_PARTICLES = 150;

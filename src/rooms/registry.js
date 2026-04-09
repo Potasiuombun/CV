@@ -1,151 +1,42 @@
+import { prop } from "./propLibrary";
+
+const roomSize = { w: 960, h: 640 };
+
 export const roomRegistry = {
   intro: {
     id: "intro",
     route: "/",
-    title: "Intro Room",
-    subtitle: "Start here and get oriented.",
-    bg: "/Generic_Home_1_Layer_1.png?v=16x16",
-    fg: "/Generic_Home_1_Layer_2_.png?v=16x16",
-    spawnRatio: { x: 0.5, y: 0.43 },
-    popOutPoints: {
-      nav: { x: 0.52, y: 0.5 },
-      fromProjects: { x: 0.28, y: 0.58 },
+    title: "Prototype Room",
+    size: roomSize,
+    spawn: { x: 480, y: 560 },
+    base: {
+      floorColor: "#102116",
+      tile: {
+        template: "floorTile",
+        alpha: 0.16,
+        step: 42,
+      },
     },
-    sectionId: "section-intro",
-    interactables: [
-      {
-        id: "intro-scroll",
-        type: "scroll",
-        label: "Read Intro",
-        x: 0.42,
-        y: 0.18,
-        radius: 24,
-        contentId: "intro-card",
-        openMode: "overlay",
-      },
-      {
-        id: "intro-cv-scroll",
-        type: "scroll",
-        label: "CV Preview",
-        x: 0.61,
-        y: 0.28,
-        radius: 24,
-        contentId: "cv-preview",
-        openMode: "pdf",
-      },
-      {
-        id: "door-projects",
-        type: "door",
-        label: "Projects Door",
-        x: 0.82,
-        y: 0.52,
-        radius: 22,
-        targetRoute: "/projects",
-        openMode: "route",
-      },
-      {
-        id: "door-linkedin",
-        type: "door",
-        label: "LinkedIn Door",
-        x: 0.15,
-        y: 0.6,
-        radius: 21,
-        href: "https://www.linkedin.com/in/tudortatar/",
-        openMode: "external",
-      },
-      {
-        id: "door-github",
-        type: "door",
-        label: "GitHub Door",
-        x: 0.74,
-        y: 0.68,
-        radius: 20,
-        href: "https://github.com/Potasiuombun",
-        openMode: "external",
-      },
+    props: [
+      // Central rug/floor item.
+      prop("rug", "rug", { x: 470, y: 440 }),
+      // Plant near lower corner.
+      prop("plant", "plant", { x: 150, y: 560 }),
     ],
-  },
-  projects: {
-    id: "projects",
-    route: "/projects",
-    title: "Projects Room",
-    subtitle: "Featured projects and deep dives.",
-    bg: "/Generic_Home_1_Layer_1.png?v=16x16",
-    fg: "/Generic_Home_1_Layer_2_.png?v=16x16",
-    spawnRatio: { x: 0.47, y: 0.53 },
-    popOutPoints: {
-      nav: { x: 0.54, y: 0.56 },
-      fromIntro: { x: 0.72, y: 0.55 },
-    },
-    sectionId: "section-projects",
-    interactables: [
-      {
-        id: "masters-thesis",
-        type: "project",
-        label: "Master's Thesis",
-        x: 0.34,
-        y: 0.2,
-        radius: 24,
-        contentId: "project-masters-thesis",
-        openMode: "overlay",
-      },
-      {
-        id: "bo-audio",
-        type: "project",
-        label: "B&O Audio Project",
-        x: 0.51,
-        y: 0.2,
-        radius: 24,
-        contentId: "project-bo-audio",
-        openMode: "overlay",
-      },
-      {
-        id: "dsb-signal",
-        type: "project",
-        label: "DSB Railway Signal Detection",
-        x: 0.68,
-        y: 0.24,
-        radius: 24,
-        contentId: "project-dsb-signal",
-        openMode: "overlay",
-      },
-      {
-        id: "redirected-walking",
-        type: "project",
-        label: "Redirected Walking",
-        x: 0.57,
-        y: 0.7,
-        radius: 24,
-        contentId: "project-redirected-walking",
-        openMode: "overlay",
-      },
-      {
-        id: "projects-gallery",
-        type: "scroll",
-        label: "Projects Gallery",
-        x: 0.37,
-        y: 0.69,
-        radius: 21,
-        contentId: "project-gallery",
-        openMode: "gallery",
-      },
-      {
-        id: "door-intro",
-        type: "door",
-        label: "Back To Intro",
-        x: 0.18,
-        y: 0.58,
-        radius: 20,
-        targetRoute: "/",
-        openMode: "route",
-      },
+    collisions: [
+      // Room boundary walls.
+      { id: "wall-top", shape: "rect", x: 20, y: 20, w: 920, h: 28 },
+      { id: "wall-left", shape: "rect", x: 20, y: 20, w: 28, h: 600 },
+      { id: "wall-right", shape: "rect", x: 912, y: 20, w: 28, h: 600 },
+      { id: "wall-bottom", shape: "rect", x: 20, y: 592, w: 920, h: 28 },
+      // Remaining furniture blocker.
+      { id: "plant-block", shape: "rect", x: 115, y: 500, w: 75, h: 90 },
     ],
   },
 };
 
-export const roomOrder = ["intro", "projects"];
+export const roomOrder = ["intro"];
 
-export const roomByRoute = Object.values(roomRegistry).reduce((acc, room) => {
-  acc[room.route] = room.id;
-  return acc;
-}, {});
+export const roomByRoute = {
+  "/": "intro",
+};

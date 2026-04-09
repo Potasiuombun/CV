@@ -3,7 +3,7 @@ body,
 #root {
   margin: 0;
   width: 100%;
-  min-height: 100%;
+  height: 100%;
   background: #040b08;
   color: #e7f5d0;
   font-family: "Courier New", monospace;
@@ -13,12 +13,21 @@ body,
   box-sizing: border-box;
 }
 
-.portfolio-root {
-  min-height: 100vh;
+.app-shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
   background:
     radial-gradient(circle at 8% 4%, rgba(68, 130, 92, 0.35), transparent 34%),
     radial-gradient(circle at 92% 12%, rgba(28, 95, 125, 0.28), transparent 38%),
     linear-gradient(180deg, #050d10 0%, #040b08 40%, #04110b 100%);
+}
+
+.app-main {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .portfolio-nav {
@@ -53,7 +62,7 @@ body,
   cursor: pointer;
   padding: 6px 10px;
   font-family: inherit;
-  font-size: 12px;
+  font-size: clamp(11px, 1.4vw, 13px);
 }
 
 .portfolio-nav-items button.is-active {
@@ -63,20 +72,21 @@ body,
 }
 
 .game-stage {
-  position: sticky;
-  top: 52px;
+  position: relative;
   z-index: 5;
-  width: min(960px, 100% - 20px);
-  margin: 12px auto;
-  border: 4px solid #2a5132;
-  box-shadow: 0 0 0 3px #99c886;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border-top: 1px solid rgba(145, 201, 145, 0.2);
   background: #000;
+  contain: strict;
 }
 
 .game-canvas {
   width: 100%;
-  height: min(68vh, 700px);
+  height: 100%;
   display: block;
+  image-rendering: pixelated;
 }
 
 .room-chip {
@@ -88,7 +98,7 @@ body,
   padding: 7px 10px;
   background: rgba(4, 12, 9, 0.76);
   border: 1px solid rgba(167, 243, 208, 0.45);
-  font-size: 11px;
+  font-size: clamp(10px, 1.2vw, 12px);
 }
 
 .welcome-overlay {
@@ -278,13 +288,12 @@ body,
 
 @media (max-width: 900px) {
   .game-stage {
-    top: 58px;
-    width: calc(100% - 12px);
-    margin: 6px auto 10px;
+    width: 100%;
+    margin: 0;
   }
 
   .game-canvas {
-    height: min(48vh, 440px);
+    height: 100%;
   }
 
   .portfolio-nav {
@@ -300,9 +309,6 @@ body,
     flex-wrap: nowrap;
     width: 100%;
     padding-bottom: 2px;
-  }
-
-  .portfolio-sections {
-    width: calc(100% - 12px);
+    scrollbar-width: thin;
   }
 }

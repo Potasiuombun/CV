@@ -1,4 +1,4 @@
-import { findNearestWalkableSpawn } from "./collision";
+import { collectRoomImagePaths } from "./roomComposer";
 
 export const loadImageWithData = (src) =>
   new Promise((resolve) => {
@@ -22,25 +22,33 @@ export const loadImageWithData = (src) =>
   });
 
 export const loadRoomAssets = async (room) => {
-  const [bg, fg] = await Promise.all([loadImageWithData(room.bg), loadImageWithData(room.fg)]);
+  const imagePaths = collectRoomImagePaths(room);
+  const loaded = await Promise.all(imagePaths.map((src) => loadImageWithData(src)));
+  const images = {};
+
+  for (let i = 0; i < imagePaths.length; i++) {
+    images[imagePaths[i]] = loaded[i].img;
+  }
+
+  const baseSrc = room.base?.image || imagePaths[0];
+  const base = loaded[imagePaths.indexOf(baseSrc)] || loaded[0];
+
   return {
-    bgImg: bg.img,
-    fgImg: fg.img,
-    bgData: bg.data,
-    fgData: fg.data,
-    w: bg.w,
-    h: bg.h,
+    images,
+    bgData: base?.data || null,
+    fgData: null,
+    w: room.size?.w || base?.w || 672,
+    h: room.size?.h || base?.h || 672,
   };
 };
 
 export const findRoomSpawn = (room, assets, preferredRatio = null) => {
-  const ratio = preferredRatio || room.spawnRatio;
-  return findNearestWalkableSpawn(
-    Math.round(assets.w * ratio.x),
-    Math.round(assets.h * ratio.y),
-    assets.w,
-    assets.h,
-    assets.bgData || null,
-    assets.fgData || null
-  );
+  const ratio = preferredRatio || room.spawnRatio || room.spawn;
+  const sx = ratio.x <= 1 ? Math.round(assets.w * ratio.x) : Math.round(ratio.x);
+  const sy = ratio.y <= 1 ? Math.round(assets.h * ratio.y) : Math.round(ratio.y);
+
+  return {
+    x: Math.max(12, Math.min(assets.w - 12, sx)),
+    y: Math.max(12, Math.min(assets.h - 12, sy)),
+  };
 };

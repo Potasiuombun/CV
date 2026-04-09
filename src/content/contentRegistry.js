@@ -89,6 +89,42 @@ export const contentRegistry = {
     pdfUrl: "/Tudor_CV.pdf",
     fallbackText: "If preview is unavailable, use project links in overlays.",
   },
+  "experience-ledger": {
+    id: "experience-ledger",
+    type: "panel",
+    title: "Experience Ledger",
+    body: [
+      "Experience across AI engineering, backend systems, and data workflows.",
+      "Focus areas: reliable APIs, model serving, and production operations.",
+    ],
+  },
+  "education-panel": {
+    id: "education-panel",
+    type: "panel",
+    title: "Education Timeline",
+    body: [
+      "MSc in Computer Engineering with focus on AI, vision, and sound.",
+      "Coursework and projects concentrated on practical, deployable systems.",
+    ],
+  },
+  "about-notes": {
+    id: "about-notes",
+    type: "panel",
+    title: "Tinkerer Notes",
+    body: [
+      "I enjoy building playful, interactive interfaces that still communicate clearly.",
+      "This portfolio uses game mechanics as a navigation and storytelling layer.",
+    ],
+  },
+  "contact-panel": {
+    id: "contact-panel",
+    type: "panel",
+    title: "Contact",
+    body: [
+      "Email: tudor_ph@yahoo.com",
+      "Use the doors in this room for LinkedIn and GitHub.",
+    ],
+  },
 };
 
 export const projectRouteToContentId = {

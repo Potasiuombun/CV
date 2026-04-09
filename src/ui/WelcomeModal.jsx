@@ -5,7 +5,7 @@ export default function WelcomeModal({ onStart }) {
     <div className="welcome-overlay">
       <div className="welcome-card" role="dialog" aria-modal="true" aria-label="Welcome">
         <h2>Welcome to my portofolio</h2>
-        <p>Move around the room and explore interactive spots. Navigation also works like a normal portfolio.</p>
+        <p>This is a clean prototype room baseline. Move with keyboard and test movement/collision.</p>
 
         <div style={{ display: "flex", gap: 18, alignItems: "flex-end", flexWrap: "wrap", marginTop: 12 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 42px)", gridTemplateRows: "repeat(2, 42px)", gap: 6 }}>
@@ -17,7 +17,6 @@ export default function WelcomeModal({ onStart }) {
             <kbd className="welcome-kbd">D</kbd>
           </div>
           <div style={{ display: "grid", gap: 6 }}>
-            <div><kbd className="welcome-kbd">E</kbd> Interact</div>
             <div><kbd className="welcome-kbd">Shift</kbd> Sprint</div>
             <div><kbd className="welcome-kbd">F1</kbd> Debug</div>
           </div>

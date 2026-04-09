@@ -1,7 +1,7 @@
 import React from "react";
 
 const overlayStyle = {
-  position: "fixed",
+  position: "absolute",
   inset: 0,
   zIndex: 40,
   background: "rgba(2, 6, 10, 0.75)",
