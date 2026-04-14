@@ -70,6 +70,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
     lastEventTs: 0,
   });
   const nearInteractableRef = useRef(null);
+  const mouseHoverIaRef = useRef(null);
   const overlayOpenRef = useRef(false);
   const onNavigateRef = useRef(onNavigate);
 
@@ -551,9 +552,39 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
     return { x: worldX, y: worldY };
   };
 
+  const handleCanvasPointerMove = (e) => {
+    if (showWelcomeRef.current || overlayOpenRef.current) return;
+    const point = toWorldPointFromPointer(e.clientX, e.clientY);
+    if (!point) { mouseHoverIaRef.current = null; return; }
+    let nearest = null;
+    let nearestDist = Infinity;
+    for (const ia of room.interactables || []) {
+      const d = Math.hypot(ia.x - point.x, ia.y - point.y);
+      if (d <= ia.radius && d < nearestDist) { nearestDist = d; nearest = ia; }
+    }
+    mouseHoverIaRef.current = nearest;
+  };
+
+  const handleCanvasPointerLeave = () => {
+    mouseHoverIaRef.current = null;
+  };
+
   const handleCanvasPointerDown = (e) => {
     if (showWelcomeRef.current) return;
     if (e.button !== 0) return;
+    if (overlayOpenRef.current) return;
+
+    // If clicking directly on a hovered interactable, trigger it immediately
+    const hovered = mouseHoverIaRef.current;
+    if (hovered) {
+      if (hovered.openMode === "navigate") {
+        onNavigateRef.current?.(hovered.targetRoom);
+      } else {
+        const content = contentRegistry[hovered.contentId];
+        if (content) setActiveOverlay(content);
+      }
+      return;
+    }
 
     const point = toWorldPointFromPointer(e.clientX, e.clientY);
     if (!point) return;
@@ -806,39 +837,41 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
 
     // --- Interactable indicators ---
     const nearIa = nearInteractableRef.current;
+    const hoverIa = mouseHoverIaRef.current;
     for (const ia of room.interactables || []) {
       const isDoor = ia.type === "door";
-      const isNear = ia === nearIa;
+      const isNear = ia === nearIa;           // player is physically close (shows [E])
+      const isHighlighted = isNear || ia === hoverIa; // either proximity or mouse hover
       const baseColor = isDoor ? "251,191,36" : "56,189,248";
       const pulse = 0.55 + 0.45 * Math.sin(t * 0.0025);
 
       // Outer glow ring (always visible)
       ctx.save();
-      ctx.strokeStyle = isNear
+      ctx.strokeStyle = isHighlighted
         ? `rgba(${baseColor},${0.55 + 0.35 * pulse})`
         : `rgba(${baseColor},0.28)`;
-      ctx.lineWidth = isNear ? 2 : 1.5;
+      ctx.lineWidth = isHighlighted ? 2 : 1.5;
       ctx.beginPath();
-      ctx.arc(ia.x, ia.y, isNear ? 18 + 4 * pulse : 14, 0, Math.PI * 2);
+      ctx.arc(ia.x, ia.y, isHighlighted ? 18 + 4 * pulse : 14, 0, Math.PI * 2);
       ctx.stroke();
 
       // Inner dot
-      ctx.fillStyle = `rgba(${baseColor},${isNear ? 0.55 : 0.22})`;
+      ctx.fillStyle = `rgba(${baseColor},${isHighlighted ? 0.55 : 0.22})`;
       ctx.beginPath();
       ctx.arc(ia.x, ia.y, 4, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
 
-      // Label
+      // Label — show [E] prompt only when player is physically near
       ctx.save();
-      ctx.font = isNear ? "bold 11px monospace" : "10px monospace";
+      ctx.font = isHighlighted ? "bold 11px monospace" : "10px monospace";
       const promptText = isNear ? `[E] ${ia.label}` : ia.label;
       const tw = ctx.measureText(promptText).width;
       const tx = ia.x - tw / 2;
-      const ty = ia.y - (isNear ? 30 : 26);
+      const ty = ia.y - (isHighlighted ? 30 : 26);
       ctx.fillStyle = "rgba(0,0,0,0.72)";
       ctx.fillRect(tx - 4, ty - 12, tw + 8, 16);
-      ctx.fillStyle = isNear
+      ctx.fillStyle = isHighlighted
         ? (isDoor ? "#fbbf24" : "#38bdf8")
         : (isDoor ? "rgba(251,191,36,0.75)" : "rgba(167,243,208,0.75)");
       ctx.fillText(promptText, tx, ty);
@@ -985,6 +1018,8 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
         className="game-canvas"
         aria-label="Prototype Room Game"
         onPointerDown={handleCanvasPointerDown}
+        onPointerMove={handleCanvasPointerMove}
+        onPointerLeave={handleCanvasPointerLeave}
       />
 
       <div className="room-chip">
