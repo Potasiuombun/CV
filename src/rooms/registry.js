@@ -81,9 +81,9 @@ export const roomRegistry = {
     props: [
       prop("rug-center", "rug",  { x: 480, y: 380 }),
       prop("desk-thesis", "desk", { x: 200, y: 190 }),
-      prop("desk-bo",     "desk", { x: 760, y: 190 }),
+      prop("desk-bo",     "desk", { x: 690, y: 190 }),
       prop("desk-dsb",    "desk", { x: 200, y: 470 }),
-      prop("desk-walk",   "desk", { x: 760, y: 470 }),
+      prop("desk-walk",   "desk", { x: 690, y: 470 }),
     ],
     collisions: [
       { id: "wall-top",    shape: "rect", x: 20,  y: 20,  w: 920, h: 28  },
@@ -91,9 +91,9 @@ export const roomRegistry = {
       { id: "wall-right",  shape: "rect", x: 912, y: 20,  w: 28,  h: 600 },
       { id: "wall-bottom", shape: "rect", x: 20,  y: 592, w: 920, h: 28  },
       { id: "desk-thesis-block", shape: "rect", x: 95,  y: 88,  w: 211, h: 102 },
-      { id: "desk-bo-block",     shape: "rect", x: 655, y: 88,  w: 211, h: 102 },
+      { id: "desk-bo-block",     shape: "rect", x: 585, y: 88,  w: 211, h: 102 },
       { id: "desk-dsb-block",    shape: "rect", x: 95,  y: 368, w: 211, h: 102 },
-      { id: "desk-walk-block",   shape: "rect", x: 655, y: 368, w: 211, h: 102 },
+      { id: "desk-walk-block",   shape: "rect", x: 585, y: 368, w: 211, h: 102 },
     ],
     interactables: [
       {
@@ -108,7 +108,7 @@ export const roomRegistry = {
       {
         id: "ia-bo",
         type: "project",
-        x: 760, y: 215,
+        x: 690, y: 215,
         radius: 75,
         label: "B&O Audio",
         contentId: "project-bo-audio",
@@ -126,7 +126,7 @@ export const roomRegistry = {
       {
         id: "ia-walk",
         type: "project",
-        x: 760, y: 495,
+        x: 690, y: 495,
         radius: 75,
         label: "Redirected Walking",
         contentId: "project-redirected-walking",

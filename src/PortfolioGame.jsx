@@ -58,7 +58,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
   const clickRouteRef = useRef([]);
   const clickGoalRef = useRef(null);
   const clickMoveActiveRef = useRef(false);
-  const roomBoundsRef = useRef({ minX: 12, minY: 12, maxX: 660, maxY: 660 });
+  const roomBoundsRef = useRef({ minX: 12, minY: 12, maxX: 948, maxY: 628 });
   const fpsHistoryRef = useRef({ frames: [], lastTime: 0, fps: 0, frameTime: 0 });
   const diagnosticsRef = useRef({
     enabled: false,
@@ -71,6 +71,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
   });
   const nearInteractableRef = useRef(null);
   const mouseHoverIaRef = useRef(null);
+  const pendingInteractionRef = useRef(null);
   const overlayOpenRef = useRef(false);
   const onNavigateRef = useRef(onNavigate);
 
@@ -140,6 +141,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
     clickRouteRef.current = [];
     clickGoalRef.current = null;
     clickMoveActiveRef.current = false;
+    pendingInteractionRef.current = null;
     setShowWelcome(false);
   };
 
@@ -172,6 +174,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
       clickRouteRef.current = [];
       clickGoalRef.current = null;
       clickMoveActiveRef.current = false;
+      pendingInteractionRef.current = null;
       nearInteractableRef.current = null;
       setActiveOverlay(null);
     };
@@ -234,6 +237,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
         clickRouteRef.current = [];
         clickGoalRef.current = null;
         clickMoveActiveRef.current = false;
+        pendingInteractionRef.current = null;
       }
     };
 
@@ -248,6 +252,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
       clickRouteRef.current = [];
       clickGoalRef.current = null;
       clickMoveActiveRef.current = false;
+      pendingInteractionRef.current = null;
     };
     const onVisibility = () => {
       if (document.hidden) {
@@ -255,6 +260,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
         clickRouteRef.current = [];
         clickGoalRef.current = null;
         clickMoveActiveRef.current = false;
+        pendingInteractionRef.current = null;
       }
     };
 
@@ -305,24 +311,21 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
     };
   }, []);
 
-  const getRoomWalkBounds = () => {
-    const currentWorld = worldRef.current;
-    return {
-      minX: 12,
-      minY: 12,
-      maxX: currentWorld.w - 12,
-      maxY: currentWorld.h - 12,
-    };
-  };
+  const getRoomWalkBounds = () => ({
+    minX: 12,
+    minY: 12,
+    maxX: room.size.w - 12,
+    maxY: room.size.h - 12,
+  });
 
   const canMoveTo = (x, y) => {
-    const b = roomBoundsRef.current;
+    const b = getRoomWalkBounds();
     if (x < b.minX || x > b.maxX || y < b.minY || y > b.maxY) return false;
     return !isBlockedByRoomCollisionWithPadding(x, y, room, PLAYER_COLLISION_PADDING);
   };
 
   const snapPointToWalkable = (x, y, maxRadius = 96, step = 4) => {
-    const b = roomBoundsRef.current;
+    const b = getRoomWalkBounds();
     const cx = clamp(x, b.minX, b.maxX);
     const cy = clamp(y, b.minY, b.maxY);
     if (canMoveTo(cx, cy)) return { x: cx, y: cy };
@@ -440,7 +443,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
     }
 
     // Generate candidate waypoint corners from blockers
-    const bounds = roomBoundsRef.current;
+    const bounds = getRoomWalkBounds();
     const rects = getCollisionRects(room);
     const candidates = [];
 
@@ -574,14 +577,29 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
     if (e.button !== 0) return;
     if (overlayOpenRef.current) return;
 
-    // If clicking directly on a hovered interactable, trigger it immediately
+    // If clicking directly on a hovered interactable, walk to it then interact
     const hovered = mouseHoverIaRef.current;
     if (hovered) {
-      if (hovered.openMode === "navigate") {
-        onNavigateRef.current?.(hovered.targetRoom);
-      } else {
-        const content = contentRegistry[hovered.contentId];
-        if (content) setActiveOverlay(content);
+      const snapped = snapPointToWalkable(hovered.x, hovered.y);
+      if (snapped) {
+        const p = playerRef.current;
+        // If already in range, trigger immediately
+        if (Math.hypot(hovered.x - p.x, hovered.y - p.y) <= hovered.radius) {
+          pendingInteractionRef.current = null;
+          if (hovered.openMode === "navigate") {
+            onNavigateRef.current?.(hovered.targetRoom);
+          } else {
+            const content = contentRegistry[hovered.contentId];
+            if (content) setActiveOverlay(content);
+          }
+          return;
+        }
+        // Otherwise walk there first
+        const route = buildClickRoute(p.x, p.y, snapped.x, snapped.y);
+        clickRouteRef.current = route;
+        clickGoalRef.current = snapped;
+        clickMoveActiveRef.current = route.length > 0;
+        pendingInteractionRef.current = hovered;
       }
       return;
     }
@@ -667,6 +685,22 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
       }
     }
     nearInteractableRef.current = nearest;
+
+    // Fire pending interaction if the player has arrived within range
+    const pending = pendingInteractionRef.current;
+    if (pending && nearest === pending) {
+      pendingInteractionRef.current = null;
+      clickRouteRef.current = [];
+      clickGoalRef.current = null;
+      clickMoveActiveRef.current = false;
+      if (pending.openMode === "navigate") {
+        onNavigateRef.current?.(pending.targetRoom);
+      } else {
+        const content = contentRegistry[pending.contentId];
+        if (content) setActiveOverlay(content);
+      }
+      return;
+    }
 
     const k = keysRef.current;
     let ax = 0;
