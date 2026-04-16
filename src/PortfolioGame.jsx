@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { SPRITE, SPRITE_SHEET_DATA_URL, SPRINT_MULTIPLIER, WALK_SPEED } from "./game/engine/constants";
+import doorAnimUrl from "./assets/tilesets/raw/animated_door_condominium.png";
+import { SPRITE, SPRITE_SHEET_DATA_URL, SPRINT_MULTIPLIER, WALK_SPEED, DOOR_ANIM } from "./game/engine/constants";
 import { facingFromVector, normalize } from "./game/engine/math";
 import { createEffectsState, drawEffects, emitSprintEffects, resetSprintEffects, tickEffects } from "./game/effects";
 import { loadRoomAssets, findRoomSpawn } from "./game/roomLoader";
@@ -34,7 +35,7 @@ const getAdaptiveDpr = (w, h) => {
   return Math.max(1, Math.sqrt(MAX_RENDER_PIXELS / Math.max(1, w * h)));
 };
 
-export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) {
+export default function TudorPortfolioRoomRPG({ roomId = "intro", spawnId = "default", onNavigate }) {
   const canvasRef = useRef(null);
   const keysRef = useRef(new Set());
   const rafRef = useRef(null);
@@ -70,7 +71,10 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
     lastEventTs: 0,
   });
   const nearInteractableRef = useRef(null);
+  const doorAnimImgRef = useRef(null);
+  const doorOpenRef = useRef({});
   const mouseHoverIaRef = useRef(null);
+  const mouseWorldRef = useRef(null);
   const pendingInteractionRef = useRef(null);
   const overlayOpenRef = useRef(false);
   const onNavigateRef = useRef(onNavigate);
@@ -155,6 +159,12 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
   }, []);
 
   useEffect(() => {
+    const img = new Image();
+    img.src = doorAnimUrl;
+    img.onload = () => { doorAnimImgRef.current = img; };
+  }, []);
+
+  useEffect(() => {
     let mounted = true;
     const loadRoom = async () => {
       const assets = await loadRoomAssets(room);
@@ -162,7 +172,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
       roomAssetsRef.current[room.id] = assets;
 
       setWorld({ w: room.size.w, h: room.size.h });
-      const spawn = findRoomSpawn(room, assets, room.spawn);
+      const spawn = findRoomSpawn(room, assets, spawnId);
       const p = playerRef.current;
       p.x = spawn.x;
       p.y = spawn.y;
@@ -176,6 +186,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
       clickMoveActiveRef.current = false;
       pendingInteractionRef.current = null;
       nearInteractableRef.current = null;
+      doorOpenRef.current = {};
       setActiveOverlay(null);
     };
 
@@ -221,7 +232,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
         const near = nearInteractableRef.current;
         if (near) {
           if (near.openMode === "navigate") {
-            onNavigateRef.current?.(near.targetRoom);
+            onNavigateRef.current?.(near.targetRoom, near.spawnId ?? "default");
           } else {
             const content = contentRegistry[near.contentId];
             if (content) setActiveOverlay(content);
@@ -558,7 +569,8 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
   const handleCanvasPointerMove = (e) => {
     if (showWelcomeRef.current || overlayOpenRef.current) return;
     const point = toWorldPointFromPointer(e.clientX, e.clientY);
-    if (!point) { mouseHoverIaRef.current = null; return; }
+    if (!point) { mouseHoverIaRef.current = null; mouseWorldRef.current = null; return; }
+    mouseWorldRef.current = point;
     let nearest = null;
     let nearestDist = Infinity;
     for (const ia of room.interactables || []) {
@@ -570,6 +582,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
 
   const handleCanvasPointerLeave = () => {
     mouseHoverIaRef.current = null;
+    mouseWorldRef.current = null;
   };
 
   const handleCanvasPointerDown = (e) => {
@@ -587,7 +600,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
         if (Math.hypot(hovered.x - p.x, hovered.y - p.y) <= hovered.radius) {
           pendingInteractionRef.current = null;
           if (hovered.openMode === "navigate") {
-            onNavigateRef.current?.(hovered.targetRoom);
+            onNavigateRef.current?.(hovered.targetRoom, hovered.spawnId ?? "default");
           } else {
             const content = contentRegistry[hovered.contentId];
             if (content) setActiveOverlay(content);
@@ -686,6 +699,17 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
     }
     nearInteractableRef.current = nearest;
 
+    // Animate door open/close based on proximity or mouse hover
+    for (const ia of room.interactables || []) {
+      if (ia.type !== "door") continue;
+      const prev = doorOpenRef.current[ia.id] ?? 0;
+      const isActive = ia === nearest || ia === mouseHoverIaRef.current;
+      const delta = DOOR_ANIM.SPEED * dt;
+      doorOpenRef.current[ia.id] = isActive
+        ? Math.min(1, prev + delta)
+        : Math.max(0, prev - delta);
+    }
+
     // Fire pending interaction if the player has arrived within range
     const pending = pendingInteractionRef.current;
     if (pending && nearest === pending) {
@@ -694,7 +718,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
       clickGoalRef.current = null;
       clickMoveActiveRef.current = false;
       if (pending.openMode === "navigate") {
-        onNavigateRef.current?.(pending.targetRoom);
+        onNavigateRef.current?.(pending.targetRoom, pending.spawnId ?? "default");
       } else {
         const content = contentRegistry[pending.contentId];
         if (content) setActiveOverlay(content);
@@ -866,8 +890,48 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
 
     drawRoomBaseLayer(ctx, room, assets?.images || {});
     drawRoomPropsLayer(ctx, room, assets?.images || {});
+
+    // --- Animated door sprites (two passes: zAbove=false before player, zAbove=true after) ---
+    const doorImg = doorAnimImgRef.current;
+    const DOOR_FS_W = DOOR_ANIM.SOURCE_W;
+    const DOOR_FS_H = DOOR_ANIM.SOURCE_H;
+    const DOOR_DS_W = DOOR_FS_W * DOOR_ANIM.SCALE;
+    const DOOR_DS_H = DOOR_FS_H * DOOR_ANIM.SCALE;
+    const DOOR_FRAMES = DOOR_ANIM.FRAMES;
+
+    const drawDoorPass = (abovePlayer) => {
+      if (!doorImg || doorImg.width <= 0 || doorImg.height <= 0) return;
+      const nearIaForDoor = nearInteractableRef.current;
+      const hoverIaForDoor = mouseHoverIaRef.current;
+      for (const ia of room.interactables || []) {
+        if (ia.type !== "door") continue;
+        if (!!ia.zAbove !== abovePlayer) continue;
+        const isHighlightedDoor = ia === nearIaForDoor || ia === hoverIaForDoor;
+        const progress = doorOpenRef.current[ia.id] ?? 0;
+        const frame = Math.min(DOOR_FRAMES - 1, Math.floor(progress * DOOR_FRAMES));
+        const yOff = ia.yDrawOffset ?? 0;
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        if (isHighlightedDoor) {
+          ctx.shadowBlur = DOOR_ANIM.GLOW_BLUR;
+          ctx.shadowColor = DOOR_ANIM.GLOW_COLOR;
+        }
+        ctx.drawImage(
+          doorImg,
+          frame * DOOR_FS_W, 0, DOOR_FS_W, DOOR_FS_H,
+          (ia.x - DOOR_DS_W / 2) | 0,
+          (ia.y - DOOR_DS_H + yOff) | 0,
+          DOOR_DS_W,
+          DOOR_DS_H
+        );
+        ctx.restore();
+      }
+    };
+
+    drawDoorPass(false); // doors behind player
     drawEffects(ctx, effectsRef.current);
     drawPlayer(ctx, currentPlayer);
+    drawDoorPass(true);  // doors in front of player (zAbove)
 
     // --- Interactable indicators ---
     const nearIa = nearInteractableRef.current;
@@ -879,22 +943,26 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
       const baseColor = isDoor ? "251,191,36" : "56,189,248";
       const pulse = 0.55 + 0.45 * Math.sin(t * 0.0025);
 
-      // Outer glow ring (always visible)
-      ctx.save();
-      ctx.strokeStyle = isHighlighted
-        ? `rgba(${baseColor},${0.55 + 0.35 * pulse})`
-        : `rgba(${baseColor},0.28)`;
-      ctx.lineWidth = isHighlighted ? 2 : 1.5;
-      ctx.beginPath();
-      ctx.arc(ia.x, ia.y, isHighlighted ? 18 + 4 * pulse : 14, 0, Math.PI * 2);
-      ctx.stroke();
+      if (!isDoor) {
+        // Outer glow ring (always visible)
+        ctx.save();
+        ctx.strokeStyle = isHighlighted
+          ? `rgba(${baseColor},${0.55 + 0.35 * pulse})`
+          : `rgba(${baseColor},0.28)`;
+        ctx.lineWidth = isHighlighted ? 2 : 1.5;
+        ctx.beginPath();
+        ctx.arc(ia.x, ia.y, isHighlighted ? 18 + 4 * pulse : 14, 0, Math.PI * 2);
+        ctx.stroke();
 
-      // Inner dot
-      ctx.fillStyle = `rgba(${baseColor},${isHighlighted ? 0.55 : 0.22})`;
-      ctx.beginPath();
-      ctx.arc(ia.x, ia.y, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+        // Inner dot
+        ctx.fillStyle = `rgba(${baseColor},${isHighlighted ? 0.55 : 0.22})`;
+        ctx.beginPath();
+        ctx.arc(ia.x, ia.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      } else if (isHighlighted) {
+        // Door: glow is handled directly on the sprite above — nothing extra here
+      }
 
       // Label — show [E] prompt only when player is physically near
       ctx.save();
@@ -902,7 +970,10 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
       const promptText = isNear ? `[E] ${ia.label}` : ia.label;
       const tw = ctx.measureText(promptText).width;
       const tx = ia.x - tw / 2;
-      const ty = ia.y - (isHighlighted ? 30 : 26);
+      // For doors: use labelYOffset if explicitly set in the registry, otherwise place 14px above sprite top
+      const ty = isDoor
+        ? ((ia.y - DOOR_DS_H + (ia.yDrawOffset ?? 0)) | 0) + (ia.labelYOffset !== undefined ? ia.labelYOffset : -14)
+        : ia.y - (isHighlighted ? 30 : 26);
       ctx.fillStyle = "rgba(0,0,0,0.72)";
       ctx.fillRect(tx - 4, ty - 12, tw + 8, 16);
       ctx.fillStyle = isHighlighted
@@ -924,6 +995,28 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
       const localX = Math.max(0, Math.round(currentPlayer.x - originX));
       const localY = Math.max(0, Math.round(currentPlayer.y - originY));
       drawCollisionDebug(ctx, room, PLAYER_COLLISION_PADDING);
+
+      // Draw interactable radius areas
+      for (const ia of room.interactables || []) {
+        const isDoor = ia.type === "door";
+        ctx.save();
+        ctx.strokeStyle = isDoor ? "rgba(251,191,36,0.6)" : "rgba(56,189,248,0.6)";
+        ctx.fillStyle   = isDoor ? "rgba(251,191,36,0.08)" : "rgba(56,189,248,0.08)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.arc(ia.x, ia.y, ia.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // centre cross
+        ctx.strokeStyle = isDoor ? "rgba(251,191,36,0.9)" : "rgba(56,189,248,0.9)";
+        ctx.beginPath();
+        ctx.moveTo(ia.x - 4, ia.y); ctx.lineTo(ia.x + 4, ia.y);
+        ctx.moveTo(ia.x, ia.y - 4); ctx.lineTo(ia.x, ia.y + 4);
+        ctx.stroke();
+        ctx.restore();
+      }
 
       // Draw click route
       const route = clickRouteRef.current;
@@ -978,6 +1071,7 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
         frameTime: fpsHistory.frameTime,
         speed: Math.round(speed),
         diag,
+        mouseWorld: mouseWorldRef.current,
       };
     }
 
@@ -985,9 +1079,9 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
 
     if (debugHudData) {
       ctx.fillStyle = "rgba(0,0,0,0.65)";
-      ctx.fillRect(6, 6, 356, 160);
+      ctx.fillRect(6, 6, 356, 174);
       ctx.strokeStyle = "rgba(167,243,208,0.45)";
-      ctx.strokeRect(6, 6, 356, 160);
+      ctx.strokeRect(6, 6, 356, 174);
       ctx.fillStyle = "#a7f3d0";
       ctx.font = "9px monospace";
       ctx.fillText(`room=${room.id}`, 12, 20);
@@ -1011,6 +1105,8 @@ export default function TudorPortfolioRoomRPG({ roomId = "intro", onNavigate }) 
         128
       );
       ctx.fillText("F1 debug | F2 toggle logs | Click auto-sprints | Shift sprint keyboard", 12, 144);
+      const mw = debugHudData.mouseWorld;
+      ctx.fillText(mw ? `mouse wx=${Math.round(mw.x)} wy=${Math.round(mw.y)}` : "mouse: outside", 12, 158);
     }
   };
 

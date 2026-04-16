@@ -50,3 +50,14 @@ export const SMOKE_MAX_PARTICLES = 150;
 export const SMOKE_RING_INTERVAL = 0.085;
 export const SMOKE_MAX_RINGS = 36;
 export const SMOKE_MAX_SPEED_LINES = 60;
+
+// Door sprite (animated_door_condominium.png)
+export const DOOR_ANIM = {
+  SOURCE_W: 48,       // px width of each frame in the sprite sheet
+  SOURCE_H: 32,       // px height of the sprite sheet (= frame height)
+  SCALE: 3,           // integer pixel-art upscale factor
+  FRAMES: 8,          // number of opening frames to use
+  SPEED: 3.5,         // animation progress units per second (0→1)
+  GLOW_BLUR: 12,
+  GLOW_COLOR: "rgba(251,191,36,0.9)",
+};

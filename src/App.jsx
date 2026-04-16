@@ -7,6 +7,7 @@ const getRoomIdFromPath = (pathname) => roomByRoute[pathname] || "intro";
 
 export default function App() {
 	const [activeRoomId, setActiveRoomId] = useState(getRoomIdFromPath(window.location.pathname));
+	const [pendingSpawnId, setPendingSpawnId] = useState("default");
 	const rooms = useMemo(() => roomOrder.map((id) => roomRegistry[id]), []);
 
 	useEffect(() => {
@@ -25,9 +26,10 @@ export default function App() {
 		};
 	}, []);
 
-	const onNavigate = (roomId) => {
+	const onNavigate = (roomId, spawnId = "default") => {
 		const room = roomRegistry[roomId] || roomRegistry.intro;
 		const nextPath = room.route;
+		setPendingSpawnId(spawnId);
 		if (window.location.pathname !== nextPath || window.location.search) {
 			window.history.pushState({}, "", nextPath);
 		}
@@ -42,7 +44,7 @@ export default function App() {
 		<div className="app-shell">
 			<PortfolioNav rooms={rooms} activeRoomId={activeRoomId} onNavigate={onNavigate} />
 			<main className="app-main" aria-label="Portfolio RPG viewport">
-				<PortfolioGame roomId={activeRoomId} onNavigate={onNavigate} />
+				<PortfolioGame roomId={activeRoomId} spawnId={pendingSpawnId} onNavigate={onNavigate} />
 			</main>
 		</div>
 	);

@@ -42,10 +42,12 @@ export const loadRoomAssets = async (room) => {
   };
 };
 
-export const findRoomSpawn = (room, assets, preferredRatio = null) => {
-  const ratio = preferredRatio || room.spawnRatio || room.spawn;
-  const sx = ratio.x <= 1 ? Math.round(assets.w * ratio.x) : Math.round(ratio.x);
-  const sy = ratio.y <= 1 ? Math.round(assets.h * ratio.y) : Math.round(ratio.y);
+export const findRoomSpawn = (room, assets, spawnId = "default") => {
+  // Support both legacy single `spawn` and new `spawns` map
+  const spawnsMap = room.spawns || (room.spawn ? { default: room.spawn } : {});
+  const point = spawnsMap[spawnId] || spawnsMap["default"] || { x: assets.w / 2, y: assets.h / 2 };
+  const sx = point.x <= 1 ? Math.round(assets.w * point.x) : Math.round(point.x);
+  const sy = point.y <= 1 ? Math.round(assets.h * point.y) : Math.round(point.y);
 
   return {
     x: Math.max(12, Math.min(assets.w - 12, sx)),
